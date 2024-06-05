@@ -57,10 +57,10 @@ public class Lox {
 //            System.out.println(token);
 //        }
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
         if (hadError) return;
-        System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
+//        System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(statements);
     }
 
     // it's good engineering practice to separate the code that generates the errors from the code that reports them.
