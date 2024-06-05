@@ -11,8 +11,10 @@ import java.util.List;
 //import java.util.Scanner;
 
 public class Lox {
+    private static final Interpreter interpreter = new Interpreter();
     // fields
     static boolean hadError = false;
+    static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -32,6 +34,7 @@ public class Lox {
 
         // Indicate an error in the exit code
         if (hadError) System.exit(65);
+        if (hadRuntimeError) System.exit(70);
     }
 
     private static void runPrompt() throws IOException {
@@ -50,15 +53,32 @@ public class Lox {
     private static void run(String source) {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
-
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+//        for (Token token : tokens) {
+//            System.out.println(token);
+//        }
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse();
+        if (hadError) return;
+        System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(expression);
     }
 
     // it's good engineering practice to separate the code that generates the errors from the code that reports them.
     static void error(int line, String message) {
         report(line, "", message);
+    }
+
+    static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
+    }
+
+    static void runtimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token.line + "]");
+        hadRuntimeError = true;
     }
 
     private static void report(int line, String where, String message) {
