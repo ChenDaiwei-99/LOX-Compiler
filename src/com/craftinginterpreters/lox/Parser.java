@@ -53,10 +53,22 @@ class Parser {
     }
 
     private Stmt statement() {
+        if (match(IF)) return ifStatement();
         if (match(PRINT)) return printStatement();
+        if (match(LEFT_BRACE)) return new Stmt.Block(block());
         return expressionStatement();
         // it's the typical final fallthrough case when parsing a statement
         // since it's hard to proactively recognize an expression from its first token
+    }
+
+    private Stmt ifStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'if'.");
+        Expr condition = expression();
+        consume(RIGHT_PAREN, "Expect ')' after if condition.");
+        Stmt thenBranch = statement();
+        Stmt elseBranch = null;
+        if (match(ELSE)) elseBranch = statement();
+        return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
     private Stmt printStatement() {
@@ -71,8 +83,53 @@ class Parser {
         return new Stmt.Expression(expr);
     }
 
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+        while(!check(RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration());
+        }
+        consume(RIGHT_BRACE, "Expect '}' after block");
+        return statements;
+    }
+
     private Expr expression() { // why not static here?
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment() {
+        Expr expr = or();
+        if (match(EQUAL)) { // since assignment is right-associative, we don't need any loop to build up the assignment sequence
+            Token equals = previous();
+            Expr value = assignment();  // instead, we recursively call assignment() to parse the right-hand side
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+            // we don't throw the error, since the parser isn't in a confused state
+            // where we need to go into panic mode and synchronize.
+            error(equals, "Invalid assignment target.");
+        }
+        return expr;
+    }
+
+    private Expr or() {
+        Expr expr = and();  // logical "and" has higher precedence
+        while (match(OR)) {
+            Token operator = previous();
+            Expr right = and();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr and() {
+        Expr expr = equality();
+        while (match(AND)) {
+            Token operator = previous();
+            Expr right = equality();
+            expr = new Expr.Logical(expr, operator, right);
+        }
+        return expr;
     }
 
     private Expr equality() {
