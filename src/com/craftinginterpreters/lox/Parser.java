@@ -1,6 +1,7 @@
 package com.craftinginterpreters.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;  // this is a list interface, it can represent both ArrayList and LinkedList
 import java.util.Stack;
 
@@ -53,6 +54,7 @@ class Parser {
     }
 
     private Stmt statement() {
+        if (match(FOR)) return forStatement();  // we don't declare new statement, we "desugar" the for statement with while statement
         if (match(IF)) return ifStatement();
         if (match(PRINT)) return printStatement();
         if (match(WHILE)) return whileStatement();
@@ -60,6 +62,37 @@ class Parser {
         return expressionStatement();
         // it's the typical final fallthrough case when parsing a statement
         // since it's hard to proactively recognize an expression from its first token
+    }
+
+    private Stmt forStatement() {
+        consume(LEFT_PAREN, "Expect '(' after 'for'.");
+        Stmt initializer;
+        if (match(SEMICOLON)) {
+            initializer = null;
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+        Expr condition = null;
+        if (!check(SEMICOLON)) condition = expression();
+        consume(SEMICOLON, "Expect ';' after loop condition.");
+        Expr increment = null;
+        if (!check(RIGHT_PAREN)) increment = expression();
+        consume(RIGHT_PAREN, "Expect ')' after for clauses.");
+        Stmt body = statement();
+        if (increment != null) {
+            body = new Stmt.Block(
+                Arrays.asList(
+                    body,
+                    new Stmt.Expression(increment)
+                )
+            );
+        }
+        if (condition == null) condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+        if (initializer != null) body = new Stmt.Block(Arrays.asList(initializer, body));
+        return body;
     }
 
     private Stmt ifStatement() {
