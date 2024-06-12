@@ -46,7 +46,7 @@ class Parser {
         }
     }
 
-    // the kind can be either "function" or "method"
+    // kind can be either "function" or "method"
     private Stmt.Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
         consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");

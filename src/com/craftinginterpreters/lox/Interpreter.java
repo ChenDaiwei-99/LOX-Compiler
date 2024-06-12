@@ -194,7 +194,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     // we will convert it into its runtime representation.
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
-        LoxFunction function = new LoxFunction(stmt);
+        LoxFunction function = new LoxFunction(stmt, environment);
         // the function declaration should binds the resulting object to a new variable
         environment.define(stmt.name.lexeme, function);
         return null;
