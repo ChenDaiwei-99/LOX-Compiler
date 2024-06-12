@@ -126,8 +126,8 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         LoxCallable function = (LoxCallable)callee;
         if (arguments.size() != function.arity()) {
             throw new RuntimeError(expr.paren, "Expected "+
-                    function.arity() + " arguments but got " +
-                    arguments.size() + ".");
+                function.arity() + " arguments but got " +
+                arguments.size() + ".");
         }
         return function.call(this, arguments);
     }
@@ -190,6 +190,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
+    // Stmt.Function is a function syntax node (a compiler-time representation of the function)
+    // we will convert it into its runtime representation.
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        LoxFunction function = new LoxFunction(stmt);
+        // the function declaration should binds the resulting object to a new variable
+        environment.define(stmt.name.lexeme, function);
+        return null;
+    }
+
     @Override
     public Void visitIfStmt(Stmt.If stmt) {
         if (isTruthy(evaluate(stmt.condition))) {
@@ -205,6 +215,17 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
         return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) value = evaluate(stmt.value);
+        // after getting the value, we wrap it in a custom exception class and throw it
+        // NOTICE: when we execute the return statement, we use an exception to unwind
+        // the interpreter past the visit methods of all of containing statements back to
+        // the code that began executing the body.
+        throw new Return(value);
     }
 
     @Override

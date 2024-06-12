@@ -18,11 +18,11 @@ class Parser {
     // Parser: consume a sequence of tokens, output parser tree
     Parser(List<Token> tokens) {
         this.tokens = tokens;
-        System.out.println("[Debug]: print all tokens");
-        for (Token token: tokens) {
-            System.out.println(token.toString());
-        }
-        System.out.println("[Debug]: complete print all tokens");
+//        System.out.println("[Debug]: print all tokens");
+//        for (Token token: tokens) {
+//            System.out.println(token.toString());
+//        }
+//        System.out.println("[Debug]: complete print all tokens");
     }
 
     List<Stmt> parse() {
@@ -75,6 +75,7 @@ class Parser {
         if (match(FOR)) return forStatement();  // we don't declare new statement, we "desugar" the for statement with while statement
         if (match(IF)) return ifStatement();
         if (match(PRINT)) return printStatement();
+        if (match(RETURN)) return returnStatement();
         if (match(WHILE)) return whileStatement();
         if (match(LEFT_BRACE)) return new Stmt.Block(block());
         return expressionStatement();
@@ -127,6 +128,14 @@ class Parser {
         Expr value = expression();
         consume(SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
+    }
+
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(SEMICOLON)) value = expression();
+        consume(SEMICOLON, "Expect ';' after return value");
+        return new Stmt.Return(keyword, value);
     }
 
     private Stmt whileStatement() {
