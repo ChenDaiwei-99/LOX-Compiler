@@ -41,7 +41,7 @@ class Parser {
         } catch (ParseError error) {
             synchronize();
             // This declaration() method is the method we call repeatedly when parsing a series of statements in a block
-            // So it's the right pace to synchronize when the parser goes into panic mode.
+            // So, it's the right pace to synchronize when the parser goes into panic mode.
             return null;
         }
     }
