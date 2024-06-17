@@ -105,7 +105,6 @@ abstract class Expr {
     static class This extends Expr {
         This(Token keyword) {
         this.keyword = keyword;
-        System.out.println("keyword:" + keyword);
     }
 
         @Override
