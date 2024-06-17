@@ -14,15 +14,15 @@ class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    // Scanner: consume a sequence of  raw strings, output tokens
+    // Scanner: consume a sequence of raw strings, output tokens
     // Parser: consume a sequence of tokens, output parser tree
     Parser(List<Token> tokens) {
         this.tokens = tokens;
-//        System.out.println("[Debug]: print all tokens");
-//        for (Token token: tokens) {
-//            System.out.println(token.toString());
-//        }
-//        System.out.println("[Debug]: complete print all tokens");
+        System.out.println("[Debug]: print all tokens");
+        for (Token token: tokens) {
+            System.out.println(token.toString());
+        }
+        System.out.println("[Debug]: complete print all tokens");
     }
 
     List<Stmt> parse() {
@@ -297,6 +297,7 @@ class Parser {
         if (match(TRUE)) return new Expr.Literal(true);
         if (match(NIL)) return new Expr.Literal(null);
         if (match(NUMBER, STRING)) return new Expr.Literal(previous().literal);
+        if (match(THIS)) return new Expr.This(previous());
         if (match(IDENTIFIER)) return new Expr.Variable(previous());
         if (match(LEFT_PAREN)) {
             Expr expr = expression();   // recursively find the inner expressions between the "(" and ")"

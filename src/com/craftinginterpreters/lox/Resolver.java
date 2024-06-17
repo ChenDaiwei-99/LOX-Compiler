@@ -9,7 +9,7 @@ import java.util.Stack;
 // The function of the resolver: each time it visits a variable, it tells the interpreter how many scopes
 // there are between the current scope and the scope where the variable is defined.
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
-    private enum FunctionType { NONE, FUNCTION }
+    private enum FunctionType { NONE, FUNCTION, METHOD }
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
     private FunctionType currentFunction = FunctionType.NONE;   // check whether we are currently visiting in a function or not
@@ -30,6 +30,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitClassStmt(Stmt.Class stmt) {
         declare(stmt.name);
         define(stmt.name);
+        beginScope();
+        scopes.peek().put("this", true);    // resolve "this" as the closest local variable just outside the block for the method boy
+        for (Stmt.Function method : stmt.methods) {
+            FunctionType declaration = FunctionType.METHOD;
+            resolveFunction(method, declaration);
+        }
+        endScope();
         return null;
     }
 
@@ -138,6 +145,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitSetExpr(Expr.Set expr) {
         resolve(expr.value);
         resolve(expr.object);
+        return null;
+    }
+
+    @Override
+    public Void visitThisExpr(Expr.This expr) {
+        resolveLocal(expr, expr.keyword);
         return null;
     }
 
