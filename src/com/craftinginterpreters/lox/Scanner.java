@@ -93,7 +93,7 @@ class Scanner {
             default:
                 if (isDigit(c)) {
                     number();
-                } else if (isAlpha(c)) {    // an important principle: maximal munch
+                } else if (isAlpha(c)) {
                     identifier();
                 } else {
                     Lox.error(line, "Unexpected character.");
@@ -104,7 +104,7 @@ class Scanner {
 
     // some necessary helper functions
     private void identifier() {
-        while(isAlphaNumeric(peek())) advance();
+        while(isAlphaNumeric(peek())) advance();    // an important principle: maximal munch
         String text = source.substring(start, current);
         TokenType type = keywords.get(text);
         if (type == null) type = IDENTIFIER;    // a good writing style, pre-define a HashMap.
