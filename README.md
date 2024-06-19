@@ -10,5 +10,5 @@
 
 - get familiar with the recursive algorithms
 
-- learn some nice coding habits.
+- learn some nice coding habit.
 
