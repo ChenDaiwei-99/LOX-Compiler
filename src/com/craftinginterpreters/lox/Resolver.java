@@ -9,7 +9,8 @@ import java.util.Stack;
 // The function of the resolver: each time it visits a variable, it tells the interpreter how many scopes
 // there are between the current scope and the scope where the variable is defined.
 public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
-    private enum FunctionType { NONE, FUNCTION, METHOD }
+
+    private enum FunctionType { NONE, FUNCTION, INITIALIZER, METHOD }
     private enum ClassType { NONE, CLASS }
     private final Interpreter interpreter;
     private final Stack<Map<String, Boolean>> scopes = new Stack<>();
@@ -38,6 +39,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         scopes.peek().put("this", true);    // resolve "this" as the closest local variable just outside the block for the method boy
         for (Stmt.Function method : stmt.methods) {
             FunctionType declaration = FunctionType.METHOD;
+            if (method.name.lexeme.equals("init")) declaration = FunctionType.INITIALIZER;
             resolveFunction(method, declaration);
         }
         endScope();
@@ -70,7 +72,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (currentFunction == FunctionType.NONE) {
             Lox.error(stmt.keyword, "Can't return from top-level code.");
         }
-        if (stmt.value != null) resolve(stmt.value);
+        if (stmt.value != null) {
+            if (currentFunction == FunctionType.INITIALIZER) {
+                Lox.error(stmt.keyword, "Can't return a value from an initializer");
+            }
+            resolve(stmt.value);
+        }
         return null;
     }
 
